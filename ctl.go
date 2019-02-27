@@ -12,11 +12,22 @@ import (
 	"github.com/chzyer/readline"
 	"github.com/juju/errors"
 	"github.com/pingcap/dm/dm/config"
+	bf "github.com/pingcap/tidb-tools/pkg/binlog-filter"
+	"github.com/pingcap/tidb-tools/pkg/filter"
+	"github.com/pingcap/tidb-tools/pkg/table-router"
 	"github.com/spf13/cobra"
 )
 
-// TaskCfg is config of task
-var TaskCfg config.TaskConfig
+var (
+	// TaskCfg is config of task
+	TaskCfg *config.TaskConfig
+	// BWList is black white list of task
+	BWList map[string]*filter.Filter
+	// BinlogFilter is binlog event filter list of task
+	BinlogFilter map[string]*bf.BinlogEvent
+	// TableRouter is table router of task
+	TableRouter map[string]*router.Table
+)
 
 // Start starts running a command
 func Start(args []string) {
@@ -27,7 +38,8 @@ func Start(args []string) {
 
 	rootCmd.AddCommand(
 		NewLoadConfigFileCmd(),
-		//NewCheckBWListCmd(),
+		NewCheckBWListCmd(),
+		NewShowTaskConfigCmd(),
 		//NewCheckTableRouteCmd(),
 		//NewCheckBinlogEventFilterCmd(),
 	)
@@ -55,6 +67,8 @@ func GetFileContent(fpath string) ([]byte, error) {
 
 func main() {
 	fmt.Println("Welcome dm util tool!")
+
+	//log.SetLevelByString("error")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
